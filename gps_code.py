@@ -1,23 +1,49 @@
+'''
+******READ BEFORE RUNNING*******
+Summary of Code:
+This code runs the IMU and GPS code simultaneously and displays their corresponding data.
+
+If Running Code on Raspberry Pi Pico For First Time:
+Only one Pi has all of the necessary installed and therefore is fully functional.
+Working on the others will not work unless all of the libraries are there. See the 
+transition document for more information on this.
+There is also a specific wiring needed for everything, this would be in the transition document. 
+
+Thing To Know When Modifying Code:
+This code is running on CircuitPython (not MicroPython - they're slightly different),
+therefore any modifications must be done in CircuitPython. It's not much different than
+regular Python, it's just the implementation of modules that's wonky. Since it is running
+on CircuitPython, only one file can be run at a time, so everything must be located here.
+You can't reference multiple files, it will not work. 
+
+Why did we choose CircuitPython instead of Micropython?:
+We tried tirelessly to get the IMU to work with MicroPython - literally multiple hours
+worth of work. We were not able to install the 'busio' library  in MicroPython so that
+basically made it impossible to integrate the IMU. CircuitPython was the only way we got
+the IMU to work. Unless you want to spend an outrageous amount of time getting the IMU 
+integrated in MicroPython, I would suggest keeping it in CircuitPython.
+
+Contact Info:
+Drew Fowler: fowler52@purdue.edu
+Paloma Arellano: palomasemailis@gmail.com
+'''
+
 import time
-#from machine import UART, Pin
-#from lcd import initialize_lcd
-#import stdin
 import time
 import busio
 import board
 import adafruit_bno055
-#from polygon import Point, is_within_polygon
 
 INT_MAX = 10000
 
-
+# Creates coordinate point struct
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
     
 
-#To determine if the coordinate/function q lies on the segment pr
+# To determine if the coordinate/function q lies on the segment pr
 def onSegment(p:tuple, q:tuple, r:tuple) -> bool:
     
     if((q[0] <= max(p[0], r[0])) &
@@ -112,9 +138,10 @@ if __name__ == '__main__':
         print("False")
 """
 
-
+# Turns on the LCD - currently not integrated correctly
+# This function is still running on MicroPython so it would need to be changed to CircuitPython
 def initialize_lcd(backlight_red, backlight_green, backlight_blue):
-    lcd_uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+    lcd_uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))         # This line specifically should be changed to CircuitPython
     lcd_uart.write('|')  # write 5 bytes
     lcd_uart.write(b'\x18')  # write 5 bytes
     lcd_uart.write(b'\x08')  # contrast
@@ -127,17 +154,18 @@ def initialize_lcd(backlight_red, backlight_green, backlight_blue):
     lcd_uart.write('-')  # Clear display
     return lcd_uart
 
+# Initializes GPS
 def initialize_gps():
     #return UART(0, baudrate=9600, tx=Pin(12), rx=Pin(13))
     return busio.UART(baudrate=9600, tx=board.GP12, rx=board.GP13, bits=8, stop=1, timeout=0, receiver_buffer_size=64)
 
-
+# Gets Latitude
 def get_latitude(str_array, index):
     latDeg = float(str_array[index][0: 2])
     latMin = float(str_array[index][2: 10]) / 60
     return '%f' % (float(latDeg) + float(latMin))
 
-
+# Gets Longitude
 def get_longitude(str_array, index2):
     longDeg = float(str_array[index2][1: 3])
     longMin = float(str_array[index2][3: 11]) / 60
@@ -177,7 +205,7 @@ def get_current_location(gps_uart):
             print("in GPGGA2")
             return latitude, longitude
 """
-
+# Gets Current Location
 def get_current_location(gps_uart):
     latitude_avg = 0
     longitude_avg = 0
@@ -186,33 +214,21 @@ def get_current_location(gps_uart):
         longitude = 0
         
         while True:
-            #print("hi")
-            #while not gps_uart.read():
-                #print("hello")
-            #    pass
-            #print("hola")
-            #time.sleep_ms(30)
-            
-            #if gps_uart.read() == None or 0:
-            #    pass
             
             time.sleep(0.03)
             str_array = gps_uart.readline()
             if str_array is None:
                 break
             try:
-                str_array = str_array.decode("utf-8")
-                #time.sleep_ms(30)
+                str_array = str_array.decode("utf-8")       # Decodes GPS input
                 time.sleep(0.03)
                 str_array = str_array.split(",")
-                print(str_array)
+                print(str_array)                            # Prints GPS Output
             except:
                 pass
             
             
             if str_array[0] is '$GPGLL':
-                #print(str_array)
-                #str_array = str_array.split(",")
                 print("in GPGLL")
                 #lcd_uart.write("in GNGLL")
                 latitude = get_latitude(str_array, 1)
@@ -237,6 +253,7 @@ def get_current_location(gps_uart):
     
     return latitude_avg, longitude_avg
 
+# Gets Temperature from IMU
 def temperature():
   global last_val  # pylint: disable=global-statement
   result = sensor.temperature
@@ -247,6 +264,7 @@ def temperature():
   last_val = result
   return result
 
+# Displays IMU sensor information
 def imu_stuff():
   print("Temperature: {} degrees C".format(sensor.temperature))
   print("Accelerometer (m/s^2): {}".format(sensor.acceleration))
@@ -261,17 +279,17 @@ def imu_stuff():
 
 if __name__ == '__main__':
 
-    i2c = busio.I2C(board.GP15, board.GP14, frequency=400000)
-    sensor = adafruit_bno055.BNO055_I2C(i2c)
+    i2c = busio.I2C(board.GP15, board.GP14, frequency=400000)       # Initializes I2C for the IMU
+    sensor = adafruit_bno055.BNO055_I2C(i2c)                        # Initializes IMU
 
     last_val = 0xFFFF
     
-    
-    gps_uart = initialize_gps()
+    gps_uart = initialize_gps()                                     # Initializes GPS
     #lcd_uart = initialize_lcd(backlight_red=255, backlight_green=1, backlight_blue=255)
     
     #lcd_uart.write("Connecting to GPS...")  # For 16x2 LCD
     
+    # Example Polygon that currently does nothing
     polygon = [
     (40.430713, 86.915236),
     (40.430751, 86.915264),
@@ -280,15 +298,13 @@ if __name__ == '__main__':
     ]
     
     while True:
-        imu_stuff()
-        #time.sleep_ms(300)
+        imu_stuff()                                                     # Displays IMU Stuff
         time.sleep(0.3)
-        latitude_avg, longitude_avg = get_current_location(gps_uart)
+        latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
         #print(lcd_text)
         #lcd_uart.write("     EPICS EVEI  ")  # For 16x2 LCD
-        #time.sleep_ms(15)
         time.sleep(0.015)
-        print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))
+        print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
         '''
         if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
             
@@ -297,6 +313,8 @@ if __name__ == '__main__':
             
             lcd_uart.write("OUT")  # For 16x2 LCD
         '''
+
+        ###### This would print the information to the LCD - which is currently in MicroPython and does not work
         #time.sleep_ms(15)
         #lcd_uart.write("Current Location:   ")  # For 16x2 LCD
         #time.sleep_ms(15)
