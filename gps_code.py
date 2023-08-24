@@ -321,5 +321,5 @@ if __name__ == '__main__':
         #lcd_uart.write("Lat:  " + str(latitude_avg) + " N   ")  # For 16x2 LCD
         #time.sleep_ms(15)
         #lcd_uart.write("Long: " + str(longitude_avg) + " W   ")  # For 16x2 LCD
-        #time.sleep_ms(15)
+        #time.sleep_ms(15) 
         #break
