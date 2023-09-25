@@ -23,17 +23,11 @@ basically made it impossible to integrate the IMU. CircuitPython was the only wa
 the IMU to work. Unless you want to spend an outrageous amount of time getting the IMU 
 integrated in MicroPython, I would suggest keeping it in CircuitPython.
 
-Quick Note on Errors:
-If you attempt to run this code indoors you might get a "value" error. This is because the
-gps is lacking a strong enough signal and some of the values in the "str_array" are left blank.
-We are working on code to notify the user when this occurs and to seak better signal gain.
-
 Contact Info:
 Drew Fowler: fowler52@purdue.edu
 Paloma Arellano: palomasemailis@gmail.com
 '''
 
-import time
 import time
 import busio
 import board
@@ -146,17 +140,18 @@ if __name__ == '__main__':
 # Turns on the LCD - currently not integrated correctly
 # This function is still running on MicroPython so it would need to be changed to CircuitPython
 def initialize_lcd(backlight_red, backlight_green, backlight_blue):
-    lcd_uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))         # This line specifically should be changed to CircuitPython
-    lcd_uart.write('|')  # write 5 bytes
+    #lcd_uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))         # This line specifically should be changed to CircuitPython
+    lcd_uart = busio.UART(board.GP4, board.GP5, baudrate=9600)
+    lcd_uart.write(b'|')  # write 5 bytes
     lcd_uart.write(b'\x18')  # write 5 bytes
     lcd_uart.write(b'\x08')  # contrast
-    lcd_uart.write('|')  # Put LCD into setting mode
+    lcd_uart.write(b'|')  # Put LCD into setting mode
     lcd_uart.write(b'\x2B')  # Set green backlight amount to 0%
     lcd_uart.write(backlight_red.to_bytes(1, 'big'))  # Set green backlight amount to 0%
     lcd_uart.write(backlight_green.to_bytes(1, 'big'))  # Set green backlight amount to 0%
     lcd_uart.write(backlight_blue.to_bytes(1, 'big'))  # Set green backlight amount to 0%
-    lcd_uart.write('|')  # Setting character
-    lcd_uart.write('-')  # Clear display
+    lcd_uart.write(b'|')  # Setting character
+    lcd_uart.write(b'-')  # Clear display
     return lcd_uart
 
 # Initializes GPS
@@ -290,9 +285,10 @@ if __name__ == '__main__':
     last_val = 0xFFFF
     
     gps_uart = initialize_gps()                                     # Initializes GPS
-    #lcd_uart = initialize_lcd(backlight_red=255, backlight_green=1, backlight_blue=255)
+    lcd_uart = initialize_lcd(backlight_red=255, backlight_green=1, backlight_blue=255)
     
-    #lcd_uart.write("Connecting to GPS...")  # For 16x2 LCD
+    lcd_uart.write(b"Connecting to GPS...            ")  # For 16x2 LCD
+    time.sleep(1.5)
     
     # Example Polygon that currently does nothing
     polygon = [
@@ -303,28 +299,40 @@ if __name__ == '__main__':
     ]
     
     while True:
+        startTime = time.monotonic()
         imu_stuff()                                                     # Displays IMU Stuff
         time.sleep(0.3)
-        latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
-        #print(lcd_text)
-        #lcd_uart.write("     EPICS EVEI  ")  # For 16x2 LCD
-        time.sleep(0.015)
+        #latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
+        latitude_avg = 12
+        longitude_avg = 12
+
+        lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
+        time.sleep(1.5)
+        #lcd_uart.write(b'                ')  # Clear display
         print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
-        '''
+        
         if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
             
-            lcd_uart.write(" IN")  # For 16x2 LCD
+            lcd_uart.write(b"IN                              ")  # For 16x2 LCD
         else:
             
-            lcd_uart.write("OUT")  # For 16x2 LCD
-        '''
-
+            lcd_uart.write(b"OUT                             ")  # For 16x2 LCD
+        
+        #lcd_uart.write(b'                ')  # Clear display
+        
         ###### This would print the information to the LCD - which is currently in MicroPython and does not work
-        #time.sleep_ms(15)
-        #lcd_uart.write("Current Location:   ")  # For 16x2 LCD
-        #time.sleep_ms(15)
-        #lcd_uart.write("Lat:  " + str(latitude_avg) + " N   ")  # For 16x2 LCD
-        #time.sleep_ms(15)
-        #lcd_uart.write("Long: " + str(longitude_avg) + " W   ")  # For 16x2 LCD
-        #time.sleep_ms(15) 
-        #break
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Current Location:               ")  # For 16x2 LCD
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Lat:  ")  # For 16x2 LCD
+        #lcd_uart.write(latitude_avg.to_bytes(10, "big"))
+        #print(latitude_avg.to_bytes(10, "big"))
+        #lcd_uart.write(b" N   ")
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Long: " + bytes(longitude_avg) + b" W   ")  # For 16x2 LCD
+        #time.sleep(1.5)
+        
+        #lcd_uart.write(b'                ')  # Clear display
+        
+        endTime = time.monotonic()
+        print("GPS Refresh Rate: ", float(endTime - startTime))
