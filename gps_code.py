@@ -23,6 +23,11 @@ basically made it impossible to integrate the IMU. CircuitPython was the only wa
 the IMU to work. Unless you want to spend an outrageous amount of time getting the IMU 
 integrated in MicroPython, I would suggest keeping it in CircuitPython.
 
+Quick Note on Errors:
+If you attempt to run this code indoors you might get a "value" error. This is because the
+gps is lacking a strong enough signal and some of the values in the "str_array" are left blank.
+We are working on code to notify the user when this occurs and to seak better signal gain.
+
 Contact Info:
 Drew Fowler: fowler52@purdue.edu
 Paloma Arellano: palomasemailis@gmail.com
