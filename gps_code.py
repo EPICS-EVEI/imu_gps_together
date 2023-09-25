@@ -299,40 +299,44 @@ if __name__ == '__main__':
     ]
     
     while True:
-        startTime = time.monotonic()
-        imu_stuff()                                                     # Displays IMU Stuff
-        time.sleep(0.3)
-        #latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
-        latitude_avg = 12
-        longitude_avg = 12
+        try:
+            startTime = time.monotonic()
+            imu_stuff()                                                     # Displays IMU Stuff
+            time.sleep(0.3)
+            #latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
+            latitude_avg = 12
+            longitude_avg = 12
 
-        lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
-        time.sleep(1.5)
-        #lcd_uart.write(b'                ')  # Clear display
-        print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
-        
-        if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
+            lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
+            time.sleep(1.5)
+            #lcd_uart.write(b'                ')  # Clear display
+            print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
             
-            lcd_uart.write(b"IN                              ")  # For 16x2 LCD
-        else:
+            if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
+                
+                lcd_uart.write(b"IN                              ")  # For 16x2 LCD
+            else:
+                
+                lcd_uart.write(b"OUT                             ")  # For 16x2 LCD
             
-            lcd_uart.write(b"OUT                             ")  # For 16x2 LCD
-        
-        #lcd_uart.write(b'                ')  # Clear display
-        
-        ###### This would print the information to the LCD - which is currently in MicroPython and does not work
-        #time.sleep(1.5)
-        #lcd_uart.write(b"Current Location:               ")  # For 16x2 LCD
-        #time.sleep(1.5)
-        #lcd_uart.write(b"Lat:  ")  # For 16x2 LCD
-        #lcd_uart.write(latitude_avg.to_bytes(10, "big"))
-        #print(latitude_avg.to_bytes(10, "big"))
-        #lcd_uart.write(b" N   ")
-        #time.sleep(1.5)
-        #lcd_uart.write(b"Long: " + bytes(longitude_avg) + b" W   ")  # For 16x2 LCD
-        #time.sleep(1.5)
-        
-        #lcd_uart.write(b'                ')  # Clear display
-        
-        endTime = time.monotonic()
-        print("GPS Refresh Rate: ", float(endTime - startTime))
+            #lcd_uart.write(b'                ')  # Clear display
+            
+            ###### This would print the information to the LCD - which is currently in MicroPython and does not work
+            #time.sleep(1.5)
+            #lcd_uart.write(b"Current Location:               ")  # For 16x2 LCD
+            #time.sleep(1.5)
+            #lcd_uart.write(b"Lat:  ")  # For 16x2 LCD
+            #lcd_uart.write(latitude_avg.to_bytes(10, "big"))
+            #print(latitude_avg.to_bytes(10, "big"))
+            #lcd_uart.write(b" N   ")
+            #time.sleep(1.5)
+            #lcd_uart.write(b"Long: " + bytes(longitude_avg) + b" W   ")  # For 16x2 LCD
+            #time.sleep(1.5)
+            
+            #lcd_uart.write(b'                ')  # Clear display
+            
+            endTime = time.monotonic()
+            print("GPS Refresh Rate: ", float(endTime - startTime))
+        except (ValueError):
+            print("ValueError: Likely weak signal, try testing outside")
+
