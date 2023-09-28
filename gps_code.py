@@ -209,6 +209,8 @@ def get_current_location(gps_uart):
 def get_current_location(gps_uart):
     latitude_avg = 0
     longitude_avg = 0
+    j = 10
+    temp = time.monotonic()
     for i in range(0, 10):
         latitude = 0
         longitude = 0
@@ -244,13 +246,25 @@ def get_current_location(gps_uart):
                 longitude = get_longitude(str_array, 4)
                 #print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
                 break
-            
+        
+        if (float(latitude) == 0 or float(longitude) == 0):
+            j-=1
+        else:
+            temp2 = time.monotonic()
+            #print(temp2 - temp)
+            temp = time.monotonic()
+        
         latitude_avg = float(latitude_avg) + float(latitude)
         longitude_avg = float(longitude_avg) + float(longitude)
         
-    latitude_avg /= 2
-    longitude_avg /= 2
+        #print(i)
+        #print(str_array)
     
+    if (j != 0):
+        latitude_avg /= j
+        longitude_avg /= j
+    
+    #print("LatIN: " + str(latitude_avg) + " LongIN: " + str(longitude_avg))
     return latitude_avg, longitude_avg
 
 # Gets Temperature from IMU
@@ -305,10 +319,14 @@ if __name__ == '__main__':
             startTime = time.monotonic()
             imu_stuff()                                                     # Displays IMU Stuff
             time.sleep(0.3)
-            latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
+            latitude_avg, longitude_avg = 0,0
+            
+            while (latitude_avg == 0 and longitude_avg == 0):
+                latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
+                #print("LatOUT: " + str(latitude_avg) + " LongOUT: " + str(longitude_avg))
 
             lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
-            time.sleep(1.5)
+            #time.sleep(1.5)
             #lcd_uart.write(b'                ')  # Clear display
             print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
             
