@@ -223,33 +223,33 @@ def get_current_location(gps_uart):
                 str_array = str_array.decode("utf-8")       # Decodes GPS input
                 time.sleep(0.03)
                 str_array = str_array.split(",")
-                print(str_array)                            # Prints GPS Output
+                #print(str_array)                            # Prints GPS Output
             except:
                 pass
             
             
             if str_array[0] is '$GPGLL':
-                print("in GPGLL")
+                #print("in GPGLL")
                 #lcd_uart.write("in GNGLL")
                 latitude = get_latitude(str_array, 1)
                 longitude = get_longitude(str_array, 3)
-                print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
+                #print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
                 break
                 #lcd_uart.write("in GNGLL2")
 
             elif str_array[0] is '$GPGGA':
-                print("in GPGGA")
+                #print("in GPGGA")
                 #lcd_uart.write("in GNGGA")
                 latitude = get_latitude(str_array, 2)
                 longitude = get_longitude(str_array, 4)
-                print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
+                #print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
                 break
             
         latitude_avg = float(latitude_avg) + float(latitude)
         longitude_avg = float(longitude_avg) + float(longitude)
         
-    latitude_avg /= 10
-    longitude_avg /= 10
+    latitude_avg /= 2
+    longitude_avg /= 2
     
     return latitude_avg, longitude_avg
 
@@ -266,6 +266,7 @@ def temperature():
 
 # Displays IMU sensor information
 def imu_stuff():
+  '''
   print("Temperature: {} degrees C".format(sensor.temperature))
   print("Accelerometer (m/s^2): {}".format(sensor.acceleration))
   print("Magnetometer (microteslas): {}".format(sensor.magnetic))
@@ -276,6 +277,7 @@ def imu_stuff():
   print("Gravity (m/s^2): {}".format(sensor.gravity))
   print()
   time.sleep(1)
+  '''
 
 if __name__ == '__main__':
 
@@ -292,10 +294,10 @@ if __name__ == '__main__':
     
     # Example Polygon that currently does nothing
     polygon = [
-    (40.430713, 86.915236),
-    (40.430751, 86.915264),
-    (40.430808, 86.915169),
-    (40.430751, 86.915188)
+    (40.430484, 86.915721),
+    (40.430454, 86.915769),
+    (40.430806, 86.916144),
+    (40.430835, 86.916097)
     ]
     
     while True:
@@ -303,9 +305,7 @@ if __name__ == '__main__':
             startTime = time.monotonic()
             imu_stuff()                                                     # Displays IMU Stuff
             time.sleep(0.3)
-            #latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
-            latitude_avg = 12
-            longitude_avg = 12
+            latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
 
             lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
             time.sleep(1.5)
