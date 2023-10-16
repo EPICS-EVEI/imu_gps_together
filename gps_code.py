@@ -222,7 +222,6 @@ def get_current_location(gps_uart):
             continue
         try:
             str_array = str_array.decode("utf-8")       # Decodes GPS input
-            print("PING!!!!!!!!!!!")
             time.sleep(0.03)
             str_array = str_array.split(",")
             #print(str_array)                            # Prints GPS Output
