@@ -207,50 +207,47 @@ def get_current_location(gps_uart):
 """
 # Gets Current Location
 def get_current_location(gps_uart):
-    latitude_avg = 0
-    longitude_avg = 0
-    for i in range(0, 10):
-        latitude = 0
-        longitude = 0
+    latitude_LL = 0
+    longitude_LL = 0
+    latitude_GA = 0 
+    longitude_GA = 0
+    divisor = 1
+
+    while (latitude_LL == 0 and latitude_GA == 0):
+            
+        time.sleep(0.03)
+        str_array = gps_uart.readline()
         
-        while True:
-            
+        if str_array is None:
+            continue
+        try:
+            str_array = str_array.decode("utf-8")       # Decodes GPS input
+            print("PING!!!!!!!!!!!")
             time.sleep(0.03)
-            str_array = gps_uart.readline()
-            if str_array is None:
-                break
-            try:
-                str_array = str_array.decode("utf-8")       # Decodes GPS input
-                time.sleep(0.03)
-                str_array = str_array.split(",")
-                print(str_array)                            # Prints GPS Output
-            except:
-                pass
-            
+            str_array = str_array.split(",")
+            #print(str_array)                            # Prints GPS Output
             
             if str_array[0] is '$GPGLL':
-                print("in GPGLL")
+                #print("in GPGLL")
                 #lcd_uart.write("in GNGLL")
-                latitude = get_latitude(str_array, 1)
-                longitude = get_longitude(str_array, 3)
-                print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
-                break
+                latitude_LL = get_latitude(str_array, 1)
+                longitude_LL = get_longitude(str_array, 3)
+                #print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
                 #lcd_uart.write("in GNGLL2")
 
             elif str_array[0] is '$GPGGA':
-                print("in GPGGA")
+                #print("in GPGGA")
                 #lcd_uart.write("in GNGGA")
-                latitude = get_latitude(str_array, 2)
-                longitude = get_longitude(str_array, 4)
-                print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
-                break
-            
-        latitude_avg = float(latitude_avg) + float(latitude)
-        longitude_avg = float(longitude_avg) + float(longitude)
-        
-    latitude_avg /= 10
-    longitude_avg /= 10
+                latitude_GA = get_latitude(str_array, 2)
+                longitude_GA = get_longitude(str_array, 4)
+                #print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
+        except (ValueError, IndexError):
+            print("Error: Likely weak signal, try testing outside")
     
+    latitude_avg = (float(latitude_LL) + float(latitude_GA)) / divisor
+    longitude_avg = (float(longitude_LL) + float(longitude_GA)) / divisor
+
+    #print("LatIN: " + str(latitude_avg) + " LongIN: " + str(longitude_avg))
     return latitude_avg, longitude_avg
 
 # Gets Temperature from IMU
@@ -266,6 +263,7 @@ def temperature():
 
 # Displays IMU sensor information
 def imu_stuff():
+  '''
   print("Temperature: {} degrees C".format(sensor.temperature))
   print("Accelerometer (m/s^2): {}".format(sensor.acceleration))
   print("Magnetometer (microteslas): {}".format(sensor.magnetic))
@@ -276,6 +274,7 @@ def imu_stuff():
   print("Gravity (m/s^2): {}".format(sensor.gravity))
   print()
   time.sleep(1)
+  '''
 
 if __name__ == '__main__':
 
@@ -288,55 +287,57 @@ if __name__ == '__main__':
     lcd_uart = initialize_lcd(backlight_red=255, backlight_green=1, backlight_blue=255)
     
     lcd_uart.write(b"Connecting to GPS...            ")  # For 16x2 LCD
-    time.sleep(1.5)
+    #time.sleep(1.5)
     
     # Example Polygon that currently does nothing
     polygon = [
-    (40.430713, 86.915236),
-    (40.430751, 86.915264),
-    (40.430808, 86.915169),
-    (40.430751, 86.915188)
+    (40.430484, 86.915721),
+    (40.430454, 86.915769),
+    (40.430806, 86.916144),
+    (40.430835, 86.916097)
     ]
     
     while True:
-        try:
-            startTime = time.monotonic()
-            imu_stuff()                                                     # Displays IMU Stuff
-            time.sleep(0.3)
-            #latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
-            latitude_avg = 12
-            longitude_avg = 12
+        #try:
+        startTime = time.monotonic()
+        #imu_stuff()                                                     # Displays IMU Stuff
+        #time.sleep(0.3)
+        latitude_avg, longitude_avg = 0,0
+        
+        #while (latitude_avg == 0 and longitude_avg == 0):
+        latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
+        print("LatOUT: " + str(latitude_avg) + " LongOUT: " + str(longitude_avg))
 
-            lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
-            time.sleep(1.5)
-            #lcd_uart.write(b'                ')  # Clear display
-            print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
+        lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
+        
+        #lcd_uart.write(b'                ')  # Clear display
+        
+        print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
+        
+        if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
             
-            if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
-                
-                lcd_uart.write(b"IN                              ")  # For 16x2 LCD
-            else:
-                
-                lcd_uart.write(b"OUT                             ")  # For 16x2 LCD
+            lcd_uart.write(b"IN                              ")  # For 16x2 LCD
+        else:
             
-            #lcd_uart.write(b'                ')  # Clear display
-            
-            ###### This would print the information to the LCD - which is currently in MicroPython and does not work
-            #time.sleep(1.5)
-            #lcd_uart.write(b"Current Location:               ")  # For 16x2 LCD
-            #time.sleep(1.5)
-            #lcd_uart.write(b"Lat:  ")  # For 16x2 LCD
-            #lcd_uart.write(latitude_avg.to_bytes(10, "big"))
-            #print(latitude_avg.to_bytes(10, "big"))
-            #lcd_uart.write(b" N   ")
-            #time.sleep(1.5)
-            #lcd_uart.write(b"Long: " + bytes(longitude_avg) + b" W   ")  # For 16x2 LCD
-            #time.sleep(1.5)
-            
-            #lcd_uart.write(b'                ')  # Clear display
-            
-            endTime = time.monotonic()
-            print("GPS Refresh Rate: ", float(endTime - startTime))
-        except (ValueError):
-            print("ValueError: Likely weak signal, try testing outside")
-
+            lcd_uart.write(b"OUT                             ")  # For 16x2 LCD
+        
+        #lcd_uart.write(b'                ')  # Clear display
+        
+        ###### This would print the information to the LCD - right now this messes up the spacing on the LCD for IN and OUT messages
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Current Location:               ")  # For 16x2 LCD
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Lat:  ")  # For 16x2 LCD
+        #lcd_uart.write(latitude_avg.to_bytes(10, "big"))
+        #print(latitude_avg.to_bytes(10, "big"))
+        #lcd_uart.write(b" N   ")
+        #time.sleep(1.5)
+        #lcd_uart.write(b"Long: " + bytes(longitude_avg) + b" W   ")  # For 16x2 LCD
+        #time.sleep(1.5)
+        
+        #lcd_uart.write(b'                ')  # Clear display
+        
+        endTime = time.monotonic()
+        print("GPS Refresh Rate: ", float(endTime - startTime))
+        #except (ValueError):
+        #    print("ValueError: Likely weak signal, try testing outside")
