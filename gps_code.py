@@ -207,7 +207,6 @@ def get_current_location(gps_uart):
 """
 # Gets Current Location
 def get_current_location(gps_uart):
-<<<<<<< HEAD
     latitude_LL = 0
     longitude_LL = 0
     latitude_GA = 0 
@@ -218,15 +217,6 @@ def get_current_location(gps_uart):
             
         time.sleep(0.03)
         str_array = gps_uart.readline()
-=======
-    latitude_avg = 0
-    longitude_avg = 0
-    j = 10
-    temp = time.monotonic()
-    for i in range(0, 10):
-        latitude = 0
-        longitude = 0
->>>>>>> 5be73145af18554a8c617fe53add763f8fb87d69
         
         if str_array is None:
             continue
@@ -234,42 +224,20 @@ def get_current_location(gps_uart):
             str_array = str_array.decode("utf-8")       # Decodes GPS input
             print("PING!!!!!!!!!!!")
             time.sleep(0.03)
-<<<<<<< HEAD
             str_array = str_array.split(",")
             #print(str_array)                            # Prints GPS Output
-=======
-            str_array = gps_uart.readline()
-            if str_array is None:
-                break
-            try:
-                str_array = str_array.decode("utf-8")       # Decodes GPS input
-                time.sleep(0.03)
-                str_array = str_array.split(",")
-                #print(str_array)                            # Prints GPS Output
-            except:
-                pass
-            
->>>>>>> 5be73145af18554a8c617fe53add763f8fb87d69
             
             if str_array[0] is '$GPGLL':
                 #print("in GPGLL")
                 #lcd_uart.write("in GNGLL")
-<<<<<<< HEAD
                 latitude_LL = get_latitude(str_array, 1)
                 longitude_LL = get_longitude(str_array, 3)
                 #print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
-=======
-                latitude = get_latitude(str_array, 1)
-                longitude = get_longitude(str_array, 3)
-                #print("in GPGLL2: Latitude: ", latitude + "  Longitude: ", longitude)
-                break
->>>>>>> 5be73145af18554a8c617fe53add763f8fb87d69
                 #lcd_uart.write("in GNGLL2")
 
             elif str_array[0] is '$GPGGA':
                 #print("in GPGGA")
                 #lcd_uart.write("in GNGGA")
-<<<<<<< HEAD
                 latitude_GA = get_latitude(str_array, 2)
                 longitude_GA = get_longitude(str_array, 4)
                 #print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
@@ -279,30 +247,6 @@ def get_current_location(gps_uart):
     latitude_avg = (float(latitude_LL) + float(latitude_GA)) / divisor
     longitude_avg = (float(longitude_LL) + float(longitude_GA)) / divisor
 
-=======
-                latitude = get_latitude(str_array, 2)
-                longitude = get_longitude(str_array, 4)
-                #print("in GPGGA2: Latitude: ", latitude  + "  Longitude: ", longitude)
-                break
-        
-        if (float(latitude) == 0 or float(longitude) == 0):
-            j-=1
-        else:
-            temp2 = time.monotonic()
-            #print(temp2 - temp)
-            temp = time.monotonic()
-        
-        latitude_avg = float(latitude_avg) + float(latitude)
-        longitude_avg = float(longitude_avg) + float(longitude)
-        
-        #print(i)
-        #print(str_array)
-    
-    if (j != 0):
-        latitude_avg /= j
-        longitude_avg /= j
-    
->>>>>>> 5be73145af18554a8c617fe53add763f8fb87d69
     #print("LatIN: " + str(latitude_avg) + " LongIN: " + str(longitude_avg))
     return latitude_avg, longitude_avg
 
@@ -354,7 +298,6 @@ if __name__ == '__main__':
     ]
     
     while True:
-<<<<<<< HEAD
         #try:
         startTime = time.monotonic()
         #imu_stuff()                                                     # Displays IMU Stuff
@@ -372,22 +315,6 @@ if __name__ == '__main__':
         print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
         
         if is_within_polygon(polygon, (float(latitude_avg), float(longitude_avg))) is True:
-=======
-        try:
-            startTime = time.monotonic()
-            imu_stuff()                                                     # Displays IMU Stuff
-            time.sleep(0.3)
-            latitude_avg, longitude_avg = 0,0
-            
-            while (latitude_avg == 0 and longitude_avg == 0):
-                latitude_avg, longitude_avg = get_current_location(gps_uart)    # Gets location info
-                #print("LatOUT: " + str(latitude_avg) + " LongOUT: " + str(longitude_avg))
-
-            lcd_uart.write(b"EPICS EVEI                      ")  # For 16x2 LCD
-            #time.sleep(1.5)
-            #lcd_uart.write(b'                ')  # Clear display
-            print("Latitude: ", str(latitude_avg) + "  Longitude: ", str(longitude_avg))    # Prints Lat and Long Info
->>>>>>> 5be73145af18554a8c617fe53add763f8fb87d69
             
             lcd_uart.write(b"IN                              ")  # For 16x2 LCD
         else:
@@ -414,3 +341,4 @@ if __name__ == '__main__':
         print("GPS Refresh Rate: ", float(endTime - startTime))
         #except (ValueError):
         #    print("ValueError: Likely weak signal, try testing outside")
+
